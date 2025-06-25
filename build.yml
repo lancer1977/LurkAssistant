@@ -1,0 +1,78 @@
+#Streaming_Tools_Streaming_Tools_AYzWTqKrts2n-SECBp_e
+# Starter pipeline
+# Starter pipeline
+name: 1.0.2.$(rev:r)
+variables:
+  outputDir: '$(Build.ArtifactStagingDirectory)/publish1'
+  zipName: 'consoleapp.zip'
+  githubRepo: 'lancer1977/Core.Console'  # Replace with your GitHub repo, e.g. myuser/myrepo
+  releaseTag: 'v$(Build.BuildNumber)'
+  releaseName: 'Release $(Build.BuildNumber)'
+  projectpath: $(Build.SourcesDirectory)/Tests/LurkHelper.csproj
+  nuspecServiceId: 015fc12f-cd63-4ab4-8d6a-dc889e53bf70
+trigger:
+  branches:
+    include:
+    - refs/heads/main
+  paths:
+    include:
+    - src
+
+jobs:
+- job: Phase_1 
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Default
+  steps:
+  - checkout: self
+  - task: DotNetCoreCLI@2
+    displayName: dotnet restore
+    inputs:
+      command: 'restore'
+      projects: '$(projectpath)'
+      feedRestore: '$(nuspecServiceId)'
+ 
+  - script: |
+      dotnet publish '$(projectpath)'  --configuration Release --output $(outputDir) -p:SelfContained=true -p:PublishSingleFile=true -p:PublishTrimmed=true -p:IncludeNativeLibrariesForSelfExtract=true -r win-x64
+    displayName: 'Install zip tool'
+
+  - script: |
+      echo "Installing zip utility..."
+      apt-get update && apt-get install -y zip
+    displayName: 'Install zip tool'
+  - task: ArchiveFiles@2
+    displayName: 'Zip published output'
+    inputs:
+      rootFolderOrFile: '$(outputDir)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/$(zipName)'
+      replaceExistingArchive: true
+
+  - task: GitHubRelease@1
+    inputs:
+      gitHubConnection: 'Streaming Tools'
+      repositoryName: '$(Build.Repository.Name)'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: '$(releaseTag)'
+      title: '$(releaseName)'      
+      #tagSource: 'gitTag'      
+      #tagPattern: 'release-v1.*'      
+      isPreRelease: true
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased'
+      assets: '$(Build.ArtifactStagingDirectory)/$(zipName)'     
+
+  - task: SonarSource.sonarqube.6D01813A-9589-4B15-8491-8164AEB38055.SonarQubeAnalyze@5
+    displayName: Run Code Analysis
+    enabled: false
+    continueOnError: True
+    inputs:
+      jdkversion: JAVA_HOME
+  - task: SonarSource.sonarqube.291ed61f-1ee4-45d3-b1b0-bf822d9095ef.SonarQubePublish@5
+    displayName: Publish Quality Gate Result
+    enabled: false
+    continueOnError: True
+
