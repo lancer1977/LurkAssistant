@@ -2,7 +2,7 @@
 
 public interface IApplicationConfig
 {
-    int ItterationDelay { get;  }
+    int IterationDelay { get;  }
     int WindowSwapDelay { get;  }
     string AppName { get;  }
     List<string> Lurks { get;  }
