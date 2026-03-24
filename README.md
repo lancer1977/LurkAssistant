@@ -25,3 +25,9 @@ dotnet run --project src/LurkHelper.csproj
 # Override some values from CLI
 dotnet run --project src/LurkHelper.csproj -- --delay 10 --app-name firefox --browser /usr/bin/firefox
 ```
+
+
+## 📖 Documentation
+Detailed documentation can be found in the following sections:
+- [Feature Index](./docs/features/README.md)
+- [Core Capabilities](./docs/features/core-capabilities.md)
